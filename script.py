@@ -7,14 +7,33 @@ import os
 import moviepy.editor as mp
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+import tkinter as tk
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import tkinter as tk
 from tkinter import filedialog
 from scipy.signal import find_peaks
 
 
+
 GLOBAL_currentCanvas = None
+
+def freq_to_note(frequency):
+    """
+    Converts a frequency to a musical note name.
+    """
+    notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+
+    note_number = 12 * math.log2(frequency / 440) + 49  
+    note_number = round(note_number)
+        
+    note = (note_number - 1 ) % len(notes)
+    note = notes[note]
+    
+    octave = (note_number + 8 ) // len(notes)
+    
+    return note + str(octave)
 
 
 def plot_fourier_transform(audioArray, sampleRate):
@@ -47,16 +66,13 @@ def plot_fourier_transform(audioArray, sampleRate):
     fft_result = fft_result[:N//2]
     frequencies = frequencies[:N//2]
 
-    print(fft_result.shape)
-
     ## MIN distance between peaks (to stop us from picking clustered peaks)
 
     min_distance = 1000
     min_prominence = 0.3
     ## Find peaks
     peaks, _ = find_peaks(np.abs(fft_result), prominence=min_prominence, distance=min_distance)
-    ## Get the top peaks by amplitude
-    top_peaks = peaks[np.argsort(np.abs(fft_result[peaks]))[-5:]]
+
 
     ## Create a figure
     fig = Figure(figsize=(6, 4))
@@ -72,12 +88,25 @@ def plot_fourier_transform(audioArray, sampleRate):
     subfig.set_xlim(0, 10000)
 
     ## Annotate the top 3 peaks (rough way to find harmonics / major constituents)
-    for peak in top_peaks:
+    ## Get the top peaks by amplitude
+    top_peaks = peaks[np.argsort(np.abs(fft_result[peaks]))[-5:]]
+
+    texts = []
+    count = 1
+    print("Notable peaks, in order of decreasing amplitude:")
+    for peak in reversed(top_peaks):
         peak_freq = frequencies[peak]
         peak_amp = np.abs(fft_result[peak])
-        subfig.annotate(f'{peak_freq:.2f} Hz', xy=(peak_freq, peak_amp), xytext=(6, 5), fontsize=5,
-                    textcoords='offset points', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'))
+        print("Peak {}: Frequency {}, equivalent to note {}".format(count, peak_freq, freq_to_note(peak_freq)))
+        texts.append(subfig.annotate(f'{peak_freq:.2f} Hz, {freq_to_note(peak_freq)}', 
+                                    xy=(peak_freq, peak_amp), 
+                                    xytext=(3, 4), 
+                                    textcoords='offset points', 
+                                    fontsize=8,
+                                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.1')))
 
+        count += 1
+    # Automatically adjust the positions of the annotations
     return fig
 
 
