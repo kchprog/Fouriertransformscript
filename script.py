@@ -102,11 +102,13 @@ def plot_fourier_transform(audioArray, sampleRate):
     texts = []
     count = 1
     print("Notable peaks, in order of decreasing amplitude:")
+    highestPeakAmp = np.abs(fft_result[top_peaks[-1]])
+
     for peak in reversed(top_peaks):
-        size = 8 if count <= 2 else 6
-    
         peak_freq = frequencies[peak]
         peak_amp = np.abs(fft_result[peak])
+
+        size = 8 if peak_amp > (highestPeakAmp / 3) else 6
         print("Peak {}: Frequency {}, equivalent to note {}".format(count, peak_freq, freq_to_note(peak_freq)))
         texts.append(subfig.annotate(f'{peak_freq:.2f} Hz, {freq_to_note(peak_freq)}', 
                                     xy=(peak_freq, peak_amp), 
