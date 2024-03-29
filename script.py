@@ -21,17 +21,25 @@ GLOBAL_currentCanvas = None
 
 def freq_to_note(frequency):
     """
-    Converts a frequency to a musical note name.
-    """
-    notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+    Converts a frequency to a musical note name. Reference:
+    https://en.wikipedia.org/wiki/Piano_key_frequencies
+    https://stackoverflow.com/questions/64505024/turning-frequencies-into-notes-in-python
 
-    note_number = 12 * math.log2(frequency / 440) + 49  
+    """
+    A4 = 440
+
+    noteNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+
+    ## Note on the keyboard; the MIDI offset for A4 is 49 by convention
+    note_number = 12 * math.log(frequency / A4, 2) + 49
     note_number = round(note_number)
-        
-    note = (note_number - 1 ) % len(notes)
-    note = notes[note]
+
+    ## Get the name of the note
+    note = (note_number - 1 ) % 12
+    note = noteNames[note]
     
-    octave = (note_number + 8 ) // len(notes)
+    ## Get the octave
+    octave = (note_number + 8 ) // 12
     
     return note + str(octave)
 
