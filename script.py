@@ -97,12 +97,14 @@ def plot_fourier_transform(audioArray, sampleRate):
 
     ## Annotate the top 3 peaks (rough way to find harmonics / major constituents)
     ## Get the top peaks by amplitude
-    top_peaks = peaks[np.argsort(np.abs(fft_result[peaks]))[-5:]]
+    top_peaks = peaks[np.argsort(np.abs(fft_result[peaks]))[-6:]]
 
     texts = []
     count = 1
     print("Notable peaks, in order of decreasing amplitude:")
     for peak in reversed(top_peaks):
+        size = 8 if count <= 2 else 6
+    
         peak_freq = frequencies[peak]
         peak_amp = np.abs(fft_result[peak])
         print("Peak {}: Frequency {}, equivalent to note {}".format(count, peak_freq, freq_to_note(peak_freq)))
@@ -110,7 +112,7 @@ def plot_fourier_transform(audioArray, sampleRate):
                                     xy=(peak_freq, peak_amp), 
                                     xytext=(3, 4), 
                                     textcoords='offset points', 
-                                    fontsize=8,
+                                    fontsize=size,
                                     arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.1')))
 
         count += 1
