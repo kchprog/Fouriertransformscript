@@ -16,8 +16,17 @@ from tkinter import filedialog
 from scipy.signal import find_peaks
 
 
-CONVERT_DECIBELS = False
+GLOBAL_convertDecibels = False
 GLOBAL_currentCanvas = None
+
+def toggle_flag():
+    global GLOBAL_convertDecibels
+    GLOBAL_convertDecibels = not GLOBAL_convertDecibels
+    # Update the button text to reflect the new state of the flag
+    mode = "CURRENT: Raw Amplitude" if GLOBAL_convertDecibels == False else "CURRENT: dB Amplitude" 
+    button_text.set(mode)
+
+
 
 def freq_to_note(frequency):
     """
@@ -75,7 +84,7 @@ def plot_fourier_transform(audioArray, sampleRate):
     frequencies = frequencies[:N//2]
 
     ## Convert the amplitude to decibels
-    if CONVERT_DECIBELS:
+    if GLOBAL_convertDecibels:
         fft_result = 20 * np.log10(np.abs(fft_result))
 
     ## MIN distance between peaks (to stop us from picking clustered peaks)
@@ -93,7 +102,7 @@ def plot_fourier_transform(audioArray, sampleRate):
     subfig.plot(frequencies, fft_result)
     subfig.set_xlabel('Frequency (Hertz)')
 
-    if CONVERT_DECIBELS:
+    if GLOBAL_convertDecibels:
         subfig.set_ylabel('Amplitude (dB)')
     else:
         subfig.set_ylabel("Relative Amplitude")
@@ -112,8 +121,10 @@ def plot_fourier_transform(audioArray, sampleRate):
     print("Notable peaks, in order of decreasing amplitude:")
     highest_peak_amp = fft_result[top_peaks[-1]]
 
-    if CONVERT_DECIBELS:
+    if GLOBAL_convertDecibels:
         subfig.set_ylim(bottom=min(fft_result), top=max(fft_result) + 5)
+    else:
+        subfig.set_ylim(bottom=0)
 
     subfig.axhline(y=0, color='red', linestyle='--', linewidth=1)
 
@@ -207,6 +218,13 @@ root.title('Audio Fourier Transform')
 ## Button to select the video.audio file
 button = tk.Button(root, text='Select File (.mp4, .mp3 supported!)', command=select_file)
 button.pack(pady=20)
+
+# Create a StringVar to hold the button text
+button_text = tk.StringVar()
+button_text.set("CURRENT: Raw Amplitude")
+
+button = tk.Button(root, textvariable=button_text, command=toggle_flag)
+button.pack(pady=20, padx=20)  # Add some padding for aesthetics
 
 # Start the GUI event loop
 root.mainloop()
