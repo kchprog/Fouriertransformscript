@@ -16,7 +16,7 @@ from tkinter import filedialog
 from scipy.signal import find_peaks
 
 
-
+CONVERT_DECIBELS = False
 GLOBAL_currentCanvas = None
 
 def freq_to_note(frequency):
@@ -74,42 +74,55 @@ def plot_fourier_transform(audioArray, sampleRate):
     fft_result = fft_result[:N//2]
     frequencies = frequencies[:N//2]
 
-    ## MIN distance between peaks (to stop us from picking clustered peaks)
+    ## Convert the amplitude to decibels
+    if CONVERT_DECIBELS:
+        fft_result = 20 * np.log10(np.abs(fft_result))
 
+    ## MIN distance between peaks (to stop us from picking clustered peaks)
     min_distance = 1000
     min_prominence = 0.3
-    ## Find peaks
-    peaks, _ = find_peaks(np.abs(fft_result), prominence=min_prominence, distance=min_distance)
 
+    ## Find peaks
+    peaks, _ = find_peaks(fft_result, prominence=min_prominence, distance=min_distance)
 
     ## Create a figure
     fig = Figure(figsize=(6, 4))
     subfig = fig.add_subplot(1, 1, 1)
 
     ## Plot the spectrum
-    subfig.plot(frequencies, np.abs(fft_result))
+    subfig.plot(frequencies, fft_result)
     subfig.set_xlabel('Frequency (Hertz)')
-    subfig.set_ylabel('Relative Amplitude')
+
+    if CONVERT_DECIBELS:
+        subfig.set_ylabel('Amplitude (dB)')
+    else:
+        subfig.set_ylabel("Relative Amplitude")
+
     subfig.set_title('Fourier Frequency Spectrum')
 
-    ## restrict the x-axis to contain only frequencies we're expecting
+    ## Restrict the x-axis to contain only frequencies we're expecting
     subfig.set_xlim(0, 10000)
 
     ## Annotate the top 3 peaks (rough way to find harmonics / major constituents)
     ## Get the top peaks by amplitude
-    top_peaks = peaks[np.argsort(np.abs(fft_result[peaks]))[-6:]]
+    top_peaks = peaks[np.argsort(fft_result[peaks])[-6:]]
 
     texts = []
     count = 1
     print("Notable peaks, in order of decreasing amplitude:")
-    highestPeakAmp = np.abs(fft_result[top_peaks[-1]])
+    highest_peak_amp = fft_result[top_peaks[-1]]
+
+    if CONVERT_DECIBELS:
+        subfig.set_ylim(bottom=min(fft_result), top=max(fft_result) + 5)
+
+    subfig.axhline(y=0, color='red', linestyle='--', linewidth=1)
 
     for peak in reversed(top_peaks):
         peak_freq = frequencies[peak]
-        peak_amp = np.abs(fft_result[peak])
+        peak_amp = fft_result[peak]
 
-        size = 8 if peak_amp > (highestPeakAmp / 3) else 6
-        print("Peak {}: Frequency {}, equivalent to note {}".format(count, peak_freq, freq_to_note(peak_freq)))
+        size = 8 if peak_amp > (highest_peak_amp - 10) else 6
+        print(f"Peak {count}: Frequency {peak_freq}, equivalent to note {freq_to_note(peak_freq)}")
         texts.append(subfig.annotate(f'{peak_freq:.2f} Hz, {freq_to_note(peak_freq)}', 
                                     xy=(peak_freq, peak_amp), 
                                     xytext=(3, 4), 
@@ -118,6 +131,7 @@ def plot_fourier_transform(audioArray, sampleRate):
                                     arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.1')))
 
         count += 1
+    
     # Automatically adjust the positions of the annotations
     return fig
 
