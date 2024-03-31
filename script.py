@@ -122,7 +122,7 @@ def plot_fourier_transform(audioArray, sampleRate):
     highest_peak_amp = fft_result[top_peaks[-1]]
 
     if GLOBAL_convertDecibels:
-        subfig.set_ylim(bottom=min(fft_result), top=max(fft_result) + 5)
+        subfig.set_ylim(bottom=min(fft_result), top=max(fft_result) + 15)
     else:
         subfig.set_ylim(bottom=0)
 
@@ -133,6 +133,7 @@ def plot_fourier_transform(audioArray, sampleRate):
         peak_amp = fft_result[peak]
 
         size = 8 if peak_amp > (highest_peak_amp - 10) else 6
+
         print(f"Peak {count}: Frequency {peak_freq}, equivalent to note {freq_to_note(peak_freq)}")
         texts.append(subfig.annotate(f'{peak_freq:.2f} Hz, {freq_to_note(peak_freq)}', 
                                     xy=(peak_freq, peak_amp), 
