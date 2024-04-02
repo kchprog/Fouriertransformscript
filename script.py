@@ -88,8 +88,8 @@ def plot_fourier_transform(audioArray, sampleRate):
         fft_result = 20 * np.log10(np.abs(fft_result))
 
     ## MIN distance between peaks (to stop us from picking clustered peaks)
-    min_distance = 600
-    min_prominence = 0.3
+    min_distance = 100
+    min_prominence = 0.2
 
     ## Find peaks
     peaks, _ = find_peaks(fft_result, prominence=min_prominence, distance=min_distance)
